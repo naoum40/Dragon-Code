@@ -1,26 +1,6 @@
-/**
- * 🐉 Dragon Code — Application complète en un seul fichier TypeScript
- * ============================================================
- * Serveur HTTP + SQLite + NVIDIA NIM streaming + Interface web
- * Lance avec : bun run dragon-code.ts
- * Ouvre : http://localhost:3000
- *
- * Tout est dans ce fichier :
- *  - Serveur HTTP (Hono)
- *  - Base de données SQLite (bun:sqlite)
- *  - Client NVIDIA NIM (streaming SSE)
- *  - Templates HTML
- *  - CSS (thème sombre vert)
- *  - JavaScript frontend
- */
-
 import { Database } from "bun:sqlite";
 import { Hono } from "hono";
 import { serveStatic } from "hono/bun";
-
-// ============================================================
-// CONFIGURATION
-// ============================================================
 
 const NIM_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
 
@@ -41,10 +21,6 @@ const NIM_MODELS = [
 function getModel(key: string) {
   return NIM_MODELS.find((m) => m.key === key) ?? NIM_MODELS[0];
 }
-
-// ============================================================
-// BASE DE DONNÉES SQLITE
-// ============================================================
 
 const db = new Database("dragon.db", { create: true });
 db.exec("PRAGMA journal_mode = WAL;");
@@ -109,10 +85,6 @@ function removeLastAssistantMessage(conversationId: string) {
 function getMessagesForApi(conversationId: string) {
   return listMessages(conversationId).map((m) => ({ role: m.role, content: m.content }));
 }
-
-// ============================================================
-// CLIENT NVIDIA NIM (STREAMING SSE)
-// ============================================================
 
 interface ChatMessage { role: "user" | "assistant" | "system"; content: string; }
 
@@ -205,10 +177,6 @@ function makeTitle(text: string): string {
   return words.length > 42 ? words.slice(0, 42) + "..." : words;
 }
 
-// ============================================================
-// UTILITAIRES
-// ============================================================
-
 function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
@@ -224,10 +192,6 @@ function relativeTime(iso: string): string {
   if (diff < 31536000) return `${Math.floor(diff / 2592000)} mois`;
   return `il y a ${Math.floor(diff / 31536000)} an`;
 }
-
-// ============================================================
-// PARSER DIFF + COMMANDES
-// ============================================================
 
 interface DiffBlock { fileName: string; added: number; removed: number; lines: { type: "add" | "del" | "ctx"; text: string; num?: number }[]; }
 interface CommandBlock { language: string; command: string; }
@@ -325,10 +289,6 @@ function renderMarkdown(text: string, mode: string = "full"): string {
   return out;
 }
 
-// ============================================================
-// TEMPLATES HTML
-// ============================================================
-
 const icon = (name: string): string => {
   const icons: Record<string, string> = {
     plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
@@ -385,10 +345,6 @@ function chatArea(messages: Message[], currentModel: string): string {
 function layout(body: string, currentModel: string, currentConvId: string | null, convs: Conversation[]): string {
   return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>🐉 Dragon Code</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"><style>${CSS}</style></head><body><div class="app"><div class="app-body">${sidebar(currentConvId, convs)}<main class="main">${header()}${body}</main></div></div><div id="modal-root"></div><div id="toast-root"></div><div id="page-root"></div><script>window.NIM_MODELS_JS = ${JSON.stringify(NIM_MODELS.map((m) => ({ key: m.key, name: m.name })))}; window.DRAGON = { convId: ${JSON.stringify(currentConvId)}, model: ${JSON.stringify(currentModel)} };</script><script>${JS_FRONTEND}</script></body></html>`;
 }
-
-// ============================================================
-// CSS (tout le thème)
-// ============================================================
 
 const CSS = `
 :root {
@@ -700,10 +656,6 @@ html, body { height:100%; background:var(--bg-primary); color:var(--text-primary
 }
 `;
 
-// ============================================================
-// JAVASCRIPT FRONTEND
-// ============================================================
-
 const JS_FRONTEND = `
 (function() {
   const state = { convId: window.DRAGON?.convId || null, model: window.DRAGON?.model || "qwen3.5-397b", streaming: false, stopRequested: false, abortCtrl: null, mode: localStorage.getItem("dragon-mode") || "full" };
@@ -869,10 +821,6 @@ const JS_FRONTEND = `
 })();
 `;
 
-// ============================================================
-// SERVEUR HTTP (HONO)
-// ============================================================
-
 const app = new Hono();
 
 function getModelFromCtx(c: any): string {
@@ -999,10 +947,6 @@ app.post("/api/reprompt", async (c) => {
 });
 
 app.notFound((c) => c.redirect("/"));
-
-// ============================================================
-// DÉMARRAGE
-// ============================================================
 
 const port = parseInt(process.env.PORT || "3000", 10);
 const apiKey = process.env.NVIDIA_NIM_API_KEY ?? "";
