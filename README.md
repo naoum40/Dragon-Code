@@ -23,6 +23,7 @@
 The application is entirely written using:
 *   **TypeScript**
 *   **TSX** (TypeScript with React/JSX syntax)
+*   It's a **prototype** and I used the **monolight architecture**
 
 ### 🌐 Important Information
 *   **Language:** I am a French developer, so the application's user interface is currently entirely in **French**. If you fork this project, you will need to translate the UI strings yourself.
